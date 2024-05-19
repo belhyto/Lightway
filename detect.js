@@ -4,14 +4,12 @@ class App extends React.Component {
     this.state = {
       cameraDevices: [], // List of available camera devices
       selectedCamera: null, // Currently selected camera device
+      lastSpokenClass: null, // Last spoken prediction class
     };
-
-    // Initialize videoRef and canvasRef
     this.videoRef = React.createRef();
     this.canvasRef = React.createRef();
   }
 
-  // we are gonna use inline style
   styles = {
     position: 'absolute',
   };
@@ -19,13 +17,14 @@ class App extends React.Component {
   detectFromVideoFrame = (model, video) => {
     model.detect(video).then(predictions => {
       this.showDetections(predictions);
+      this.voicePredictions(predictions);
 
       requestAnimationFrame(() => {
         this.detectFromVideoFrame(model, video);
       });
     }, (error) => {
-      console.log("Couldn't start the webcam")
-      console.error(error)
+      console.log("Couldn't start the webcam");
+      console.error(error);
     });
   };
 
@@ -61,18 +60,27 @@ class App extends React.Component {
     });
   };
 
+  voicePredictions = predictions => {
+    const synth = window.speechSynthesis;
+    const currentPrediction = predictions.length > 0 ? predictions[0].class : null;
+
+    if (currentPrediction && currentPrediction !== this.state.lastSpokenClass) {
+      const text = `${currentPrediction} with confidence ${predictions[0].score.toFixed(2)}`;
+      const utterance = new SpeechSynthesisUtterance(text);
+      synth.speak(utterance);
+      this.setState({ lastSpokenClass: currentPrediction });
+    }
+  };
+
   componentDidMount() {
     if (navigator.mediaDevices.getUserMedia || navigator.mediaDevices.webkitGetUserMedia) {
-      // define a Promise that'll be used to load the webcam and read its frames
       const webcamPromise = navigator.mediaDevices
         .getUserMedia({
-          video: true,
+          video: { deviceId: this.state.selectedCamera ? { exact: this.state.selectedCamera } : undefined },
           audio: false,
         })
         .then(stream => {
-          // pass the current frame to the window.stream
           window.stream = stream;
-          // pass the stream to the videoRef
           this.videoRef.current.srcObject = stream;
 
           return new Promise(resolve => {
@@ -81,17 +89,15 @@ class App extends React.Component {
             };
           });
         }, (error) => {
-          console.log("Couldn't start the webcam")
-          console.error(error)
+          console.log("Couldn't start the webcam");
+          console.error(error);
         });
 
-      // Get list of available media input devices (cameras)
       const enumerateDevicesPromise = navigator.mediaDevices.enumerateDevices()
         .then(devices => {
           const cameraDevices = devices.filter(device => device.kind === 'videoinput');
           this.setState({ cameraDevices });
           if (cameraDevices.length > 0) {
-            // Select the first camera device by default
             this.setState({ selectedCamera: cameraDevices[0].deviceId });
           }
         })
@@ -99,10 +105,8 @@ class App extends React.Component {
           console.error('Error enumerating devices:', error);
         });
 
-      // define a Promise that'll be used to load the model
       const loadlModelPromise = cocoSsd.load();
       
-      // resolve all the Promises
       Promise.all([loadlModelPromise, webcamPromise, enumerateDevicesPromise])
         .then(values => {
           this.detectFromVideoFrame(values[0], this.videoRef.current);
@@ -113,11 +117,30 @@ class App extends React.Component {
     }
   }
 
-  // Method to switch between front and back cameras
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.selectedCamera !== this.state.selectedCamera) {
+      if (navigator.mediaDevices.getUserMedia || navigator.mediaDevices.webkitGetUserMedia) {
+        navigator.mediaDevices
+          .getUserMedia({
+            video: { deviceId: { exact: this.state.selectedCamera } },
+            audio: false,
+          })
+          .then(stream => {
+            window.stream.getTracks().forEach(track => track.stop());
+            window.stream = stream;
+            this.videoRef.current.srcObject = stream;
+          })
+          .catch(error => {
+            console.log("Couldn't switch the webcam");
+            console.error(error);
+          });
+      }
+    }
+  }
+
   switchCamera = () => {
     const { selectedCamera, cameraDevices } = this.state;
     if (cameraDevices.length < 2) {
-      // Only one camera available, no need to switch
       return;
     }
     const currentIndex = cameraDevices.findIndex(device => device.deviceId === selectedCamera);
@@ -138,11 +161,8 @@ class App extends React.Component {
           className="ai-vid"
           width="720"
           height="600"
-          // Set the deviceId to the selected camera
-          deviceId={selectedCamera}
         />
         <canvas style={this.styles} ref={this.canvasRef} width="720" height="650" />
-        {/* Button to switch between front and back cameras */}
         <button onClick={this.switchCamera}>Switch Camera</button>
       </div>
     );
