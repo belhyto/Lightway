@@ -1,13 +1,20 @@
 class App extends React.Component {
-  // reference to both the video and canvas
-  videoRef = React.createRef();
-  canvasRef = React.createRef();
+  constructor(props) {
+    super(props);
+    this.state = {
+      cameraDevices: [], // List of available camera devices
+      selectedCamera: null, // Currently selected camera device
+    };
+
+    // Initialize videoRef and canvasRef
+    this.videoRef = React.createRef();
+    this.canvasRef = React.createRef();
+  }
 
   // we are gonna use inline style
   styles = {
     position: 'absolute',
   };
-
 
   detectFromVideoFrame = (model, video) => {
     model.detect(video).then(predictions => {
@@ -78,11 +85,25 @@ class App extends React.Component {
           console.error(error)
         });
 
+      // Get list of available media input devices (cameras)
+      const enumerateDevicesPromise = navigator.mediaDevices.enumerateDevices()
+        .then(devices => {
+          const cameraDevices = devices.filter(device => device.kind === 'videoinput');
+          this.setState({ cameraDevices });
+          if (cameraDevices.length > 0) {
+            // Select the first camera device by default
+            this.setState({ selectedCamera: cameraDevices[0].deviceId });
+          }
+        })
+        .catch(error => {
+          console.error('Error enumerating devices:', error);
+        });
+
       // define a Promise that'll be used to load the model
       const loadlModelPromise = cocoSsd.load();
       
       // resolve all the Promises
-      Promise.all([loadlModelPromise, webcamPromise])
+      Promise.all([loadlModelPromise, webcamPromise, enumerateDevicesPromise])
         .then(values => {
           this.detectFromVideoFrame(values[0], this.videoRef.current);
         })
@@ -92,11 +113,22 @@ class App extends React.Component {
     }
   }
 
-  // here we are returning the video frame and canvas to draw,
-  // so we are in someway drawing our video "on the go"
+  // Method to switch between front and back cameras
+  switchCamera = () => {
+    const { selectedCamera, cameraDevices } = this.state;
+    if (cameraDevices.length < 2) {
+      // Only one camera available, no need to switch
+      return;
+    }
+    const currentIndex = cameraDevices.findIndex(device => device.deviceId === selectedCamera);
+    const newIndex = (currentIndex + 1) % cameraDevices.length;
+    this.setState({ selectedCamera: cameraDevices[newIndex].deviceId });
+  };
+
   render() {
+    const { selectedCamera } = this.state;
     return (
-      <div className="ai-container" > 
+      <div className="ai-container">
         <video
           style={this.styles}
           autoPlay
@@ -106,8 +138,12 @@ class App extends React.Component {
           className="ai-vid"
           width="720"
           height="600"
+          // Set the deviceId to the selected camera
+          deviceId={selectedCamera}
         />
         <canvas style={this.styles} ref={this.canvasRef} width="720" height="650" />
+        {/* Button to switch between front and back cameras */}
+        <button onClick={this.switchCamera}>Switch Camera</button>
       </div>
     );
   }
