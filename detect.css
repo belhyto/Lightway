@@ -2,13 +2,36 @@ body {
     margin: 0;
     border: none;
     background: rgb(224, 222, 222);
+    font-family: 'Lexend', sans-serif; /* Apply the Lexend font to the body */
+  font-weight: 700; 
   }
+  
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f0f0f0;
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+  }
+  
+  .audio-icon {
+    width: 30px;
+    height: 30px;
+    margin-right: 10px;
+  }
+  
+  .description-text {
+    font-size: 18px;
+    color: #333;
+  }
+  
   
   .ai-vid {
     position: absolute;
     width: 80%; /* Adjust width as needed */
     height: 80%; /* Adjust height as needed */
-    border-radius: 20px; /* Adjust the border-radius to get rounded corners */
+    border-radius: 60px; /* Adjust the border-radius to get rounded corners */
     top: 10%; /* Center vertically */
     left: 10%; /* Center horizontally */
   }

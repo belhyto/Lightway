@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -9,12 +10,17 @@
   <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
   <script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="detect.css">
 </head>
 <body>
-    <!-- Load our React component. -->
+  <div class="header">
+    <img src="audio.png" alt="Audio Icon" class="audio-icon" />
+    <span class="description-text">Point your camera, Hear a description</span>
+  </div>
+  
+  <!-- Load our React component. -->
   <script src="detect.js" type="text/babel"></script>
   <div id="root"></div>
 </body>
 </html>
-  

@@ -31,7 +31,7 @@ class App extends React.Component {
   showDetections = predictions => {
     const ctx = this.canvasRef.current.getContext("2d");
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    const font = "24px helvetica";
+    const font = "40px helvetica";
     ctx.font = font;
     ctx.textBaseline = "top";
 
