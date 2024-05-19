@@ -25,7 +25,29 @@ body {
     font-size: 18px;
     color: #333;
   }
+  .back-button-container {
+    position: absolute;
+    top: 5px;
+    left: 10px;
+  }
   
+  .back-button {
+    background-color: #9767F6;
+    border: none;
+    color: white;
+    padding: 10px 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+    margin: 4px 2px;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  
+  .back-button:hover {
+    background-color: #0056b3;
+  }
   
   .ai-vid {
     position: absolute;
@@ -51,6 +73,7 @@ body {
     height: auto; /* Adjust height to maintain aspect ratio */
     top: 50%; /* Center vertically */
     left: 50%; /* Center horizontally */
+    border-radius: 60px; 
     transform: translate(-50%, -50%); /* Center horizontally and vertically */
   }
 
